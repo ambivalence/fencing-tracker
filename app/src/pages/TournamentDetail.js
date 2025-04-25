@@ -150,9 +150,11 @@ export default function TournamentDetail() {
     // Default to the first fencer in the list
     const defaultFencer = fencers.length > 0 ? fencers[0] : null;
     
-    // Auto-fill weapon based on fencer's primary weapon if available
-    const defaultWeapon = defaultFencer?.primaryWeapon ? 
-      convertWeaponNameToCode(defaultFencer.primaryWeapon) : '';
+    // Auto-fill weapon only if the fencer has exactly one primary weapon
+    let defaultWeapon = '';
+    if (defaultFencer?.primaryWeapon && !defaultFencer?.secondaryWeapon) {
+      defaultWeapon = convertWeaponNameToCode(defaultFencer.primaryWeapon);
+    }
     
     setEntryFormData({
       fencerId: defaultFencer?.id || '',
@@ -186,19 +188,23 @@ export default function TournamentDetail() {
   const handleEntryInputChange = (e) => {
     const { name, value } = e.target;
     
-    // If fencer selection changes, auto-fill weapon if the fencer has a primary weapon
+    // If fencer selection changes, handle weapon auto-fill logic
     if (name === 'fencerId') {
       const selectedFencer = fencers.find(f => f.id === value);
-      if (selectedFencer && selectedFencer.primaryWeapon) {
+      
+      // Only auto-fill if the fencer has exactly one primary weapon defined
+      if (selectedFencer && selectedFencer.primaryWeapon && !selectedFencer.secondaryWeapon) {
         setEntryFormData({
           ...entryFormData,
           [name]: value,
           weapon: convertWeaponNameToCode(selectedFencer.primaryWeapon)
         });
       } else {
+        // Clear the weapon field if fencer has multiple weapons or no weapon defined
         setEntryFormData({
           ...entryFormData,
-          [name]: value
+          [name]: value,
+          weapon: ''
         });
       }
     } else {
