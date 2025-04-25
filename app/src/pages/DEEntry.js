@@ -30,6 +30,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  FormHelperText,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -149,20 +150,98 @@ export default function DEEntry() {
   
   const handleBoutInputChange = (e) => {
     const { name, value } = e.target;
-    setBoutFormData({
+    
+    // Create updated form data
+    const updatedFormData = {
       ...boutFormData,
       [name]: value,
-    });
+    };
+    
+    // If score fields are changed, automatically update victory status
+    if (name === 'scoreFor' || name === 'scoreAgainst') {
+      const scoreFor = name === 'scoreFor' ? parseInt(value) || 0 : parseInt(boutFormData.scoreFor) || 0;
+      const scoreAgainst = name === 'scoreAgainst' ? parseInt(value) || 0 : parseInt(boutFormData.scoreAgainst) || 0;
+      
+      // In fencing, victory is determined by who has the higher score
+      updatedFormData.victory = scoreFor > scoreAgainst;
+    }
+    
+    setBoutFormData(updatedFormData);
   };
   
   const handleBoutSwitchChange = (e) => {
+    const victory = e.target.checked;
+    
+    // If manually setting victory, ensure scores are consistent with victory status
+    const scoreFor = parseInt(boutFormData.scoreFor) || 0;
+    const scoreAgainst = parseInt(boutFormData.scoreAgainst) || 0;
+    
+    if (victory && scoreFor <= scoreAgainst) {
+      setSnackbar({
+        open: true,
+        message: "Victory can only be set when your score is higher than opponent's score.",
+        severity: "error"
+      });
+      return;
+    }
+    
+    if (!victory && scoreFor > scoreAgainst) {
+      setSnackbar({
+        open: true,
+        message: "Defeat can only be set when your score is lower than or equal to opponent's score.",
+        severity: "error"
+      });
+      return;
+    }
+    
     setBoutFormData({
       ...boutFormData,
-      victory: e.target.checked,
+      victory
     });
   };
   
   const handleBoutSubmit = () => {
+    // Validate required fields
+    if (!boutFormData.opponentName) {
+      setSnackbar({
+        open: true,
+        message: "Opponent name is required",
+        severity: "error"
+      });
+      return;
+    }
+    
+    if (!boutFormData.round) {
+      setSnackbar({
+        open: true,
+        message: "Round is required",
+        severity: "error"
+      });
+      return;
+    }
+    
+    // Validate scores and victory consistency
+    const scoreFor = parseInt(boutFormData.scoreFor) || 0;
+    const scoreAgainst = parseInt(boutFormData.scoreAgainst) || 0;
+    
+    if (boutFormData.victory && scoreFor <= scoreAgainst) {
+      setSnackbar({
+        open: true,
+        message: "Victory can only be set when your score is higher than opponent's score",
+        severity: "error"
+      });
+      return;
+    }
+    
+    if (!boutFormData.victory && scoreFor > scoreAgainst) {
+      setSnackbar({
+        open: true,
+        message: "Defeat can only be set when your score is lower than or equal to opponent's score",
+        severity: "error"
+      });
+      return;
+    }
+    
     if (boutDialogMode === 'add') {
       const newBout = {
         ...boutFormData,
@@ -507,6 +586,9 @@ export default function DEEntry() {
                 value={boutFormData.scoreFor}
                 onChange={handleBoutInputChange}
                 required
+                error={boutFormData.victory && parseInt(boutFormData.scoreFor) <= parseInt(boutFormData.scoreAgainst)}
+                helperText={boutFormData.victory && parseInt(boutFormData.scoreFor) <= parseInt(boutFormData.scoreAgainst) ? 
+                  "Score must be higher for victory" : ""}
               />
             </Grid>
             <Grid item xs={6}>
@@ -518,6 +600,9 @@ export default function DEEntry() {
                 value={boutFormData.scoreAgainst}
                 onChange={handleBoutInputChange}
                 required
+                error={!boutFormData.victory && parseInt(boutFormData.scoreFor) > parseInt(boutFormData.scoreAgainst)}
+                helperText={!boutFormData.victory && parseInt(boutFormData.scoreFor) > parseInt(boutFormData.scoreAgainst) ? 
+                  "Score must be lower for defeat" : ""}
               />
             </Grid>
           </Grid>
@@ -533,6 +618,9 @@ export default function DEEntry() {
             label="Victory"
             sx={{ mt: 2 }}
           />
+          <FormHelperText>
+            Victory is automatically set based on scores. Victory = Your score is higher than opponent's score.
+          </FormHelperText>
           <TextField
             margin="dense"
             name="notes"
