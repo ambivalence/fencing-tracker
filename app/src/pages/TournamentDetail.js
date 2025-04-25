@@ -23,12 +23,18 @@ import {
   MenuItem,
   IconButton,
   Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DataContext } from '../context/DataContext';
-import { formatDate, getWeaponName, getAgeCategoryName } from '../utils/helpers';
+import { formatDate, getWeaponName, getAgeCategoryName, calculatePoolStats, getDERoundName } from '../utils/helpers';
 
 export default function TournamentDetail() {
   const { id } = useParams();
@@ -39,7 +45,10 @@ export default function TournamentDetail() {
     entries, 
     addEntry, 
     updateEntry, 
-    deleteEntry 
+    deleteEntry,
+    pools,
+    bouts,
+    deBouts
   } = useContext(DataContext);
   
   const [tournament, setTournament] = useState(null);
@@ -343,48 +352,325 @@ export default function TournamentDetail() {
             </Tabs>
             <Box sx={{ p: 2 }}>
               {tabValue === 0 && (
-                <Box>
-                  <Typography variant="body1" sx={{ textAlign: 'center', py: 2 }}>
-                    Pool results will be displayed here. Add entries first, then you can add pool results.
-                  </Typography>
-                  {tournamentEntries.length > 0 && (
-                    <Box sx={{ textAlign: 'center', mt: 2 }}>
-                      <Button 
-                        variant="contained"
-                        component={RouterLink}
-                        to={`/entries/${tournamentEntries[0].id}/pools`}
-                      >
-                        Enter Pool Results
-                      </Button>
-                    </Box>
-                  )}
-                </Box>
+  <Box>
+    {tournamentEntries.length === 0 ? (
+      <Typography variant="body1" sx={{ textAlign: 'center', py: 2 }}>
+        No entries added yet. Add entries first, then you can add pool results.
+      </Typography>
+    ) : (
+      <>
+        {tournamentEntries.map(entry => {
+          const fencer = fencers.find(f => f.id === entry.fencerId);
+          const entryPools = pools.filter(pool => pool.entryId === entry.id);
+          const hasPools = entryPools.length > 0;
+          
+          return (
+            <Box key={entry.id} sx={{ mb: 3 }}>
+              <Typography variant="h6">
+                {fencer?.name || 'Unknown Fencer'} 
+                {entry.weapon && ` - ${getWeaponName(entry.weapon)}`}
+              </Typography>
+              
+              {hasPools ? (
+                entryPools.map(pool => {
+                  const poolBouts = bouts.filter(bout => bout.poolId === pool.id);
+                  const poolStats = calculatePoolStats(poolBouts);
+                  
+                  return (
+                    <Paper key={pool.id} variant="outlined" sx={{ p: 2, mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="subtitle1">
+                          Pool {pool.poolNumber} ({pool.numberOfFencers} fencers)
+                        </Typography>
+                        <Button 
+                          variant="outlined" 
+                          size="small"
+                          component={RouterLink}
+                          to={`/entries/${entry.id}/pools`}
+                        >
+                          Edit Pool
+                        </Button>
+                      </Box>
+                      
+                      {poolBouts.length > 0 ? (
+                        <>
+                          <Grid container spacing={2} sx={{ mb: 2 }}>
+                            <Grid item xs={4}>
+                              <Typography variant="body2" color="text.secondary">
+                                V/M: {poolStats.victories}/{poolStats.bouts}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <Typography variant="body2" color="text.secondary">
+                                Win %: {poolStats.winPercentage.toFixed(1)}%
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <Typography variant="body2" color="text.secondary">
+                                Indicator: {poolStats.indicator >= 0 ? '+' : ''}{poolStats.indicator}
+                              </Typography>
+                            </Grid>
+                          </Grid>
+                          
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Opponent</TableCell>
+                                  <TableCell align="center">Score</TableCell>
+                                  <TableCell align="center">Result</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {poolBouts.map(bout => (
+                                  <TableRow key={bout.id}>
+                                    <TableCell>{bout.opponentName}</TableCell>
+                                    <TableCell align="center">
+                                      <Typography 
+                                        variant="body2" 
+                                        color={bout.victory ? 'success.main' : 'error.main'}
+                                      >
+                                        {bout.scoreFor} - {bout.scoreAgainst}
+                                      </Typography>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                      {bout.victory ? (
+                                        <Typography variant="body2" color="success.main">V</Typography>
+                                      ) : (
+                                        <Typography variant="body2" color="error.main">D</Typography>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </>
+                      ) : (
+                        <Typography variant="body2" sx={{ textAlign: 'center', py: 1 }}>
+                          No bouts recorded for this pool.
+                        </Typography>
+                      )}
+                    </Paper>
+                  );
+                })
+              ) : (
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                  No pools added yet for this fencer.
+                </Typography>
               )}
+              
+              <Box sx={{ textAlign: 'center', mb: 3 }}>
+                <Button 
+                  variant="contained"
+                  component={RouterLink}
+                  to={`/entries/${entry.id}/pools`}
+                >
+                  {hasPools ? 'Edit Pool Results' : 'Add Pool Results'}
+                </Button>
+              </Box>
+              
+              <Divider sx={{ mb: 3 }} />
+            </Box>
+          );
+        })}
+      </>
+    )}
+  </Box>
+)}
               {tabValue === 1 && (
-                <Box>
-                  <Typography variant="body1" sx={{ textAlign: 'center', py: 2 }}>
-                    Direct elimination results will be displayed here. Add entries first, then you can add DE results.
-                  </Typography>
-                  {tournamentEntries.length > 0 && (
-                    <Box sx={{ textAlign: 'center', mt: 2 }}>
-                      <Button 
-                        variant="contained"
-                        component={RouterLink}
-                        to={`/entries/${tournamentEntries[0].id}/de`}
-                      >
-                        Enter DE Results
-                      </Button>
+  <Box>
+    {tournamentEntries.length === 0 ? (
+      <Typography variant="body1" sx={{ textAlign: 'center', py: 2 }}>
+        No entries added yet. Add entries first, then you can add direct elimination results.
+      </Typography>
+    ) : (
+      <>
+        {tournamentEntries.map(entry => {
+          const fencer = fencers.find(f => f.id === entry.fencerId);
+          const entryDEBouts = deBouts.filter(bout => bout.entryId === entry.id);
+          const hasDEBouts = entryDEBouts.length > 0;
+          
+          // Sort DE bouts by round (largest to smallest)
+          const sortedDEBouts = [...entryDEBouts].sort((a, b) => b.round - a.round);
+          
+          return (
+            <Box key={entry.id} sx={{ mb: 3 }}>
+              <Typography variant="h6">
+                {fencer?.name || 'Unknown Fencer'} 
+                {entry.weapon && ` - ${getWeaponName(entry.weapon)}`}
+              </Typography>
+              
+              {hasDEBouts ? (
+                <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="subtitle1">
+                      Direct Elimination Results
+                    </Typography>
+                    <Button 
+                      variant="outlined" 
+                      size="small"
+                      component={RouterLink}
+                      to={`/entries/${entry.id}/de`}
+                    >
+                      Edit DE Results
+                    </Button>
+                  </Box>
+                  
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Round</TableCell>
+                          <TableCell>Opponent</TableCell>
+                          <TableCell align="center">Score</TableCell>
+                          <TableCell align="center">Result</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {sortedDEBouts.map(bout => (
+                          <TableRow key={bout.id}>
+                            <TableCell>{getDERoundName(bout.round)}</TableCell>
+                            <TableCell>{bout.opponentName}</TableCell>
+                            <TableCell align="center">
+                              <Typography 
+                                variant="body2" 
+                                color={bout.victory ? 'success.main' : 'error.main'}
+                              >
+                                {bout.scoreFor} - {bout.scoreAgainst}
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="center">
+                              {bout.victory ? (
+                                <Typography variant="body2" color="success.main">Victory</Typography>
+                              ) : (
+                                <Typography variant="body2" color="error.main">Defeat</Typography>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  
+                  {entry.finalPlacing && (
+                    <Box sx={{ mt: 2, textAlign: 'center' }}>
+                      <Typography variant="subtitle1">
+                        Final Result: {entry.finalPlacing}{getPlacingSuffix(entry.finalPlacing)} Place
+                      </Typography>
                     </Box>
                   )}
-                </Box>
+                </Paper>
+              ) : (
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                  No direct elimination bouts added yet for this fencer.
+                </Typography>
               )}
+              
+              <Box sx={{ textAlign: 'center', mb: 3 }}>
+                <Button 
+                  variant="contained"
+                  component={RouterLink}
+                  to={`/entries/${entry.id}/de`}
+                >
+                  {hasDEBouts ? 'Edit DE Results' : 'Add DE Results'}
+                </Button>
+              </Box>
+              
+              <Divider sx={{ mb: 3 }} />
+            </Box>
+          );
+        })}
+      </>
+    )}
+  </Box>
+)}
               {tabValue === 2 && (
-                <Box>
-                  <Typography variant="body1" sx={{ textAlign: 'center', py: 2 }}>
-                    Final results summary will be displayed here.
-                  </Typography>
-                </Box>
-              )}
+  <Box>
+    {tournamentEntries.length === 0 ? (
+      <Typography variant="body1" sx={{ textAlign: 'center', py: 2 }}>
+        No entries added yet. Add entries first to see final results.
+      </Typography>
+    ) : (
+      <>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Fencer</TableCell>
+                <TableCell>Event</TableCell>
+                <TableCell align="center">Final Place</TableCell>
+                <TableCell align="center">Pool Stats</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {tournamentEntries.map(entry => {
+                const fencer = fencers.find(f => f.id === entry.fencerId);
+                const entryPools = pools.filter(pool => pool.entryId === entry.id);
+                const poolBouts = bouts.filter(bout => 
+                  entryPools.some(pool => pool.id === bout.poolId)
+                );
+                const poolStats = calculatePoolStats(poolBouts);
+                
+                return (
+                  <TableRow key={entry.id}>
+                    <TableCell>{fencer?.name || 'Unknown Fencer'}</TableCell>
+                    <TableCell>
+                      {entry.weapon && getWeaponName(entry.weapon)}
+                      {entry.ageCategory && ` ${getAgeCategoryName(entry.ageCategory)}`}
+                    </TableCell>
+                    <TableCell align="center">
+                      {entry.finalPlacing ? (
+                        <Typography 
+                          variant="body1" 
+                          fontWeight="bold"
+                          color={
+                            entry.finalPlacing === 1 ? 'gold' :
+                            entry.finalPlacing === 2 ? 'silver' :
+                            entry.finalPlacing === 3 ? '#cd7f32' : 'inherit'
+                          }
+                        >
+                          {entry.finalPlacing}{getPlacingSuffix(entry.finalPlacing)}
+                        </Typography>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          Not recorded
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {poolBouts.length > 0 ? (
+                        <Typography variant="body2">
+                          {poolStats.victories}/{poolStats.bouts} bouts • 
+                          {' '}{poolStats.winPercentage.toFixed(1)}% • 
+                          Ind: {poolStats.indicator >= 0 ? '+' : ''}{poolStats.indicator}
+                        </Typography>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          No pool data
+                        </Typography>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        
+        <Box sx={{ mt: 3, textAlign: 'center' }}>
+          <Button 
+            variant="contained"
+            component={RouterLink}
+            to={`/tournaments`}
+          >
+            Back to Tournaments
+          </Button>
+        </Box>
+      </>
+    )}
+  </Box>
+)}
             </Box>
           </Paper>
         </Grid>
