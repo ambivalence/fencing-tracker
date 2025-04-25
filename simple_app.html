@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fencing Tracker - Simple Version</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background-color: #1976d2;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .card {
+      background-color: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1565c0;
+    }
+    .list {
+      list-style: none;
+      padding: 0;
+    }
+    .list-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .list-item:last-child {
+      border-bottom: none;
+    }
+    .error {
+      color: red;
+      margin-top: 5px;
+    }
+    .success {
+      color: green;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Fencing Tracker</h1>
+    <p>Simple Version for Testing</p>
+  </div>
+  
+  <div class="container">
+    <div class="card">
+      <h2>Add Fencer</h2>
+      <div class="form-group">
+        <label for="fencerName">Name:</label>
+        <input type="text" id="fencerName" placeholder="Enter fencer name">
+      </div>
+      <div class="form-group">
+        <label for="fencerClub">Club:</label>
+        <input type="text" id="fencerClub" placeholder="Enter club name">
+      </div>
+      <div class="form-group">
+        <label for="fencerWeapon">Primary Weapon:</label>
+        <select id="fencerWeapon">
+          <option value="">Select weapon</option>
+          <option value="Foil">Foil</option>
+          <option value="Épée">Épée</option>
+          <option value="Saber">Saber</option>
+        </select>
+      </div>
+      <button onclick="addFencer()">Add Fencer</button>
+      <div id="fencerResult"></div>
+    </div>
+    
+    <div class="card">
+      <h2>Fencers</h2>
+      <ul id="fencerList" class="list">
+        <li class="list-item">No fencers added yet.</li>
+      </ul>
+    </div>
+    
+    <div class="card">
+      <h2>Add Tournament</h2>
+      <div class="form-group">
+        <label for="tournamentName">Name:</label>
+        <input type="text" id="tournamentName" placeholder="Enter tournament name">
+      </div>
+      <div class="form-group">
+        <label for="tournamentLocation">Location:</label>
+        <input type="text" id="tournamentLocation" placeholder="Enter location">
+      </div>
+      <div class="form-group">
+        <label for="tournamentDate">Date:</label>
+        <input type="date" id="tournamentDate">
+      </div>
+      <button onclick="addTournament()">Add Tournament</button>
+      <div id="tournamentResult"></div>
+    </div>
+    
+    <div class="card">
+      <h2>Tournaments</h2>
+      <ul id="tournamentList" class="list">
+        <li class="list-item">No tournaments added yet.</li>
+      </ul>
+    </div>
+    
+    <div class="card">
+      <h2>Local Storage Status</h2>
+      <button onclick="checkLocalStorage()">Check Local Storage</button>
+      <div id="storageStatus"></div>
+      <button onclick="clearAllData()">Clear All Data</button>
+    </div>
+  </div>
+
+  <script>
+    // Data storage
+    let fencers = [];
+    let tournaments = [];
+    
+    // Initialize on page load
+    window.onload = function() {
+      loadFromLocalStorage();
+      renderFencers();
+      renderTournaments();
+    };
+    
+    // Add a fencer
+    function addFencer() {
+      const name = document.getElementById('fencerName').value;
+      const club = document.getElementById('fencerClub').value;
+      const weapon = document.getElementById('fencerWeapon').value;
+      
+      if (!name) {
+        document.getElementById('fencerResult').innerHTML = '<p class="error">Please enter a name</p>';
+        return;
+      }
+      
+      const fencer = {
+        id: Date.now().toString(),
+        name,
+        club,
+        primaryWeapon: weapon,
+        createdAt: new Date().toISOString()
+      };
+      
+      fencers.push(fencer);
+      saveToLocalStorage();
+      renderFencers();
+      
+      // Clear form
+      document.getElementById('fencerName').value = '';
+      document.getElementById('fencerClub').value = '';
+      document.getElementById('fencerWeapon').value = '';
+      document.getElementById('fencerResult').innerHTML = '<p class="success">Fencer added successfully!</p>';
+    }
+    
+    // Add a tournament
+    function addTournament() {
+      const name = document.getElementById('tournamentName').value;
+      const location = document.getElementById('tournamentLocation').value;
+      const date = document.getElementById('tournamentDate').value;
+      
+      if (!name) {
+        document.getElementById('tournamentResult').innerHTML = '<p class="error">Please enter a name</p>';
+        return;
+      }
+      
+      const tournament = {
+        id: Date.now().toString(),
+        name,
+        location,
+        startDate: date,
+        createdAt: new Date().toISOString()
+      };
+      
+      tournaments.push(tournament);
+      saveToLocalStorage();
+      renderTournaments();
+      
+      // Clear form
+      document.getElementById('tournamentName').value = '';
+      document.getElementById('tournamentLocation').value = '';
+      document.getElementById('tournamentDate').value = '';
+      document.getElementById('tournamentResult').innerHTML = '<p class="success">Tournament added successfully!</p>';
+    }
+    
+    // Render fencers list
+    function renderFencers() {
+      const fencerList = document.getElementById('fencerList');
+      
+      if (fencers.length === 0) {
+        fencerList.innerHTML = '<li class="list-item">No fencers added yet.</li>';
+        return;
+      }
+      
+      let html = '';
+      fencers.forEach(fencer => {
+        html += `
+          <li class="list-item">
+            <strong>${fencer.name}</strong>
+            ${fencer.club ? ` - ${fencer.club}` : ''}
+            ${fencer.primaryWeapon ? ` - ${fencer.primaryWeapon}` : ''}
+          </li>
+        `;
+      });
+      
+      fencerList.innerHTML = html;
+    }
+    
+    // Render tournaments list
+    function renderTournaments() {
+      const tournamentList = document.getElementById('tournamentList');
+      
+      if (tournaments.length === 0) {
+        tournamentList.innerHTML = '<li class="list-item">No tournaments added yet.</li>';
+        return;
+      }
+      
+      let html = '';
+      tournaments.forEach(tournament => {
+        html += `
+          <li class="list-item">
+            <strong>${tournament.name}</strong>
+            ${tournament.location ? ` - ${tournament.location}` : ''}
+            ${tournament.startDate ? ` - ${formatDate(tournament.startDate)}` : ''}
+          </li>
+        `;
+      });
+      
+      tournamentList.innerHTML = html;
+    }
+    
+    // Format date
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    }
+    
+    // Save to local storage
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem('fencing_tracker_fencers', JSON.stringify(fencers));
+        localStorage.setItem('fencing_tracker_tournaments', JSON.stringify(tournaments));
+        console.log('Data saved to local storage');
+        return true;
+      } catch (error) {
+        console.error('Error saving to local storage:', error);
+        return false;
+      }
+    }
+    
+    // Load from local storage
+    function loadFromLocalStorage() {
+      try {
+        const storedFencers = localStorage.getItem('fencing_tracker_fencers');
+        const storedTournaments = localStorage.getItem('fencing_tracker_tournaments');
+        
+        if (storedFencers) {
+          fencers = JSON.parse(storedFencers);
+          console.log('Loaded fencers from local storage:', fencers);
+        }
+        
+        if (storedTournaments) {
+          tournaments = JSON.parse(storedTournaments);
+          console.log('Loaded tournaments from local storage:', tournaments);
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Error loading from local storage:', error);
+        return false;
+      }
+    }
+    
+    // Check local storage
+    function checkLocalStorage() {
+      const statusDiv = document.getElementById('storageStatus');
+      
+      try {
+        // Test if localStorage is available
+        const testKey = 'test';
+        localStorage.setItem(testKey, testKey);
+        localStorage.removeItem(testKey);
+        
+        // Check if our data is there
+        const fencersData = localStorage.getItem('fencing_tracker_fencers');
+        const tournamentsData = localStorage.getItem('fencing_tracker_tournaments');
+        
+        let html = '<p class="success">LocalStorage is working properly!</p>';
+        html += '<p>Current data in localStorage:</p>';
+        html += '<ul>';
+        html += `<li>fencing_tracker_fencers: ${fencersData ? 'Present' : 'Not found'}</li>`;
+        html += `<li>fencing_tracker_tournaments: ${tournamentsData ? 'Present' : 'Not found'}</li>`;
+        html += '</ul>';
+        
+        if (fencersData) {
+          html += '<p>Fencers data:</p>';
+          html += `<pre>${JSON.stringify(JSON.parse(fencersData), null, 2)}</pre>`;
+        }
+        
+        if (tournamentsData) {
+          html += '<p>Tournaments data:</p>';
+          html += `<pre>${JSON.stringify(JSON.parse(tournamentsData), null, 2)}</pre>`;
+        }
+        
+        statusDiv.innerHTML = html;
+      } catch (error) {
+        statusDiv.innerHTML = `<p class="error">LocalStorage error: ${error.message}</p>`;
+      }
+    }
+    
+    // Clear all data
+    function clearAllData() {
+      try {
+        localStorage.removeItem('fencing_tracker_fencers');
+        localStorage.removeItem('fencing_tracker_tournaments');
+        fencers = [];
+        tournaments = [];
+        renderFencers();
+        renderTournaments();
+        document.getElementById('storageStatus').innerHTML = '<p class="success">All data cleared successfully!</p>';
+      } catch (error) {
+        document.getElementById('storageStatus').innerHTML = `<p class="error">Error clearing data: ${error.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>

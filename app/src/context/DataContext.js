@@ -1,59 +1,66 @@
 import React, { createContext, useState, useEffect } from 'react';
 
+// Helper functions for local storage
+const saveToLocalStorage = (key, data) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+    console.log(`Saved data to ${key}`, data);
+    return true;
+  } catch (error) {
+    console.error(`Error saving to ${key}:`, error);
+    return false;
+  }
+};
+
+const loadFromLocalStorage = (key) => {
+  try {
+    const item = localStorage.getItem(key);
+    if (item) {
+      const data = JSON.parse(item);
+      console.log(`Loaded data from ${key}:`, data);
+      return data;
+    }
+    return null;
+  } catch (error) {
+    console.error(`Error loading from ${key}:`, error);
+    return null;
+  }
+};
+
 export const DataContext = createContext();
 
 export const DataProvider = ({ children }) => {
-  const [fencers, setFencers] = useState([]);
-  const [tournaments, setTournaments] = useState([]);
-  const [entries, setEntries] = useState([]);
-  const [pools, setPools] = useState([]);
-  const [bouts, setBouts] = useState([]);
-  const [deBouts, setDeBouts] = useState([]);
-
-  // Load data from localStorage on initial render
-  useEffect(() => {
-    const loadData = () => {
-      const storedFencers = localStorage.getItem('fencing_tracker_fencers');
-      const storedTournaments = localStorage.getItem('fencing_tracker_tournaments');
-      const storedEntries = localStorage.getItem('fencing_tracker_entries');
-      const storedPools = localStorage.getItem('fencing_tracker_pools');
-      const storedBouts = localStorage.getItem('fencing_tracker_bouts');
-      const storedDeBouts = localStorage.getItem('fencing_tracker_de_bouts');
-
-      if (storedFencers) setFencers(JSON.parse(storedFencers));
-      if (storedTournaments) setTournaments(JSON.parse(storedTournaments));
-      if (storedEntries) setEntries(JSON.parse(storedEntries));
-      if (storedPools) setPools(JSON.parse(storedPools));
-      if (storedBouts) setBouts(JSON.parse(storedBouts));
-      if (storedDeBouts) setDeBouts(JSON.parse(storedDeBouts));
-    };
-
-    loadData();
-  }, []);
+  // Initialize state with data from localStorage or empty arrays
+  const [fencers, setFencers] = useState(() => loadFromLocalStorage('fencing_tracker_fencers') || []);
+  const [tournaments, setTournaments] = useState(() => loadFromLocalStorage('fencing_tracker_tournaments') || []);
+  const [entries, setEntries] = useState(() => loadFromLocalStorage('fencing_tracker_entries') || []);
+  const [pools, setPools] = useState(() => loadFromLocalStorage('fencing_tracker_pools') || []);
+  const [bouts, setBouts] = useState(() => loadFromLocalStorage('fencing_tracker_bouts') || []);
+  const [deBouts, setDeBouts] = useState(() => loadFromLocalStorage('fencing_tracker_de_bouts') || []);
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('fencing_tracker_fencers', JSON.stringify(fencers));
+    saveToLocalStorage('fencing_tracker_fencers', fencers);
   }, [fencers]);
 
   useEffect(() => {
-    localStorage.setItem('fencing_tracker_tournaments', JSON.stringify(tournaments));
+    saveToLocalStorage('fencing_tracker_tournaments', tournaments);
   }, [tournaments]);
 
   useEffect(() => {
-    localStorage.setItem('fencing_tracker_entries', JSON.stringify(entries));
+    saveToLocalStorage('fencing_tracker_entries', entries);
   }, [entries]);
 
   useEffect(() => {
-    localStorage.setItem('fencing_tracker_pools', JSON.stringify(pools));
+    saveToLocalStorage('fencing_tracker_pools', pools);
   }, [pools]);
 
   useEffect(() => {
-    localStorage.setItem('fencing_tracker_bouts', JSON.stringify(bouts));
+    saveToLocalStorage('fencing_tracker_bouts', bouts);
   }, [bouts]);
 
   useEffect(() => {
-    localStorage.setItem('fencing_tracker_de_bouts', JSON.stringify(deBouts));
+    saveToLocalStorage('fencing_tracker_de_bouts', deBouts);
   }, [deBouts]);
 
   // Fencer CRUD operations
@@ -63,7 +70,9 @@ export const DataProvider = ({ children }) => {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
     };
-    setFencers([...fencers, newFencer]);
+    const updatedFencers = [...fencers, newFencer];
+    setFencers(updatedFencers);
+    saveToLocalStorage('fencing_tracker_fencers', updatedFencers);
     return newFencer;
   };
 
@@ -72,10 +81,14 @@ export const DataProvider = ({ children }) => {
       fencer.id === id ? { ...fencer, ...updatedData, updatedAt: new Date().toISOString() } : fencer
     );
     setFencers(updatedFencers);
+    saveToLocalStorage('fencing_tracker_fencers', updatedFencers);
   };
 
   const deleteFencer = (id) => {
-    setFencers(fencers.filter(fencer => fencer.id !== id));
+    const updatedFencers = fencers.filter(fencer => fencer.id !== id);
+    setFencers(updatedFencers);
+    saveToLocalStorage('fencing_tracker_fencers', updatedFencers);
+    
     // Also delete related entries
     const fencerEntries = entries.filter(entry => entry.fencerId === id);
     fencerEntries.forEach(entry => {
@@ -94,7 +107,9 @@ export const DataProvider = ({ children }) => {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
     };
-    setTournaments([...tournaments, newTournament]);
+    const updatedTournaments = [...tournaments, newTournament];
+    setTournaments(updatedTournaments);
+    saveToLocalStorage('fencing_tracker_tournaments', updatedTournaments);
     return newTournament;
   };
 
@@ -103,10 +118,14 @@ export const DataProvider = ({ children }) => {
       tournament.id === id ? { ...tournament, ...updatedData, updatedAt: new Date().toISOString() } : tournament
     );
     setTournaments(updatedTournaments);
+    saveToLocalStorage('fencing_tracker_tournaments', updatedTournaments);
   };
 
   const deleteTournament = (id) => {
-    setTournaments(tournaments.filter(tournament => tournament.id !== id));
+    const updatedTournaments = tournaments.filter(tournament => tournament.id !== id);
+    setTournaments(updatedTournaments);
+    saveToLocalStorage('fencing_tracker_tournaments', updatedTournaments);
+    
     // Also delete related entries
     const tournamentEntries = entries.filter(entry => entry.tournamentId === id);
     tournamentEntries.forEach(entry => {
@@ -125,7 +144,9 @@ export const DataProvider = ({ children }) => {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
     };
-    setEntries([...entries, newEntry]);
+    const updatedEntries = [...entries, newEntry];
+    setEntries(updatedEntries);
+    saveToLocalStorage('fencing_tracker_entries', updatedEntries);
     return newEntry;
   };
 
@@ -134,16 +155,23 @@ export const DataProvider = ({ children }) => {
       entry.id === id ? { ...entry, ...updatedData, updatedAt: new Date().toISOString() } : entry
     );
     setEntries(updatedEntries);
+    saveToLocalStorage('fencing_tracker_entries', updatedEntries);
   };
 
   const deleteEntry = (id) => {
-    setEntries(entries.filter(entry => entry.id !== id));
+    const updatedEntries = entries.filter(entry => entry.id !== id);
+    setEntries(updatedEntries);
+    saveToLocalStorage('fencing_tracker_entries', updatedEntries);
+    
     // Also delete related pools and DE bouts
     const entryPools = pools.filter(pool => pool.entryId === id);
     entryPools.forEach(pool => {
       deletePool(pool.id);
     });
-    setDeBouts(deBouts.filter(bout => bout.entryId !== id));
+    
+    const updatedDEBouts = deBouts.filter(bout => bout.entryId !== id);
+    setDeBouts(updatedDEBouts);
+    saveToLocalStorage('fencing_tracker_de_bouts', updatedDEBouts);
   };
 
   const getEntry = (id) => {
@@ -157,7 +185,9 @@ export const DataProvider = ({ children }) => {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
     };
-    setPools([...pools, newPool]);
+    const updatedPools = [...pools, newPool];
+    setPools(updatedPools);
+    saveToLocalStorage('fencing_tracker_pools', updatedPools);
     return newPool;
   };
 
@@ -166,12 +196,18 @@ export const DataProvider = ({ children }) => {
       pool.id === id ? { ...pool, ...updatedData, updatedAt: new Date().toISOString() } : pool
     );
     setPools(updatedPools);
+    saveToLocalStorage('fencing_tracker_pools', updatedPools);
   };
 
   const deletePool = (id) => {
-    setPools(pools.filter(pool => pool.id !== id));
+    const updatedPools = pools.filter(pool => pool.id !== id);
+    setPools(updatedPools);
+    saveToLocalStorage('fencing_tracker_pools', updatedPools);
+    
     // Also delete related bouts
-    setBouts(bouts.filter(bout => bout.poolId !== id));
+    const updatedBouts = bouts.filter(bout => bout.poolId !== id);
+    setBouts(updatedBouts);
+    saveToLocalStorage('fencing_tracker_bouts', updatedBouts);
   };
 
   const getPool = (id) => {
@@ -185,7 +221,9 @@ export const DataProvider = ({ children }) => {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
     };
-    setBouts([...bouts, newBout]);
+    const updatedBouts = [...bouts, newBout];
+    setBouts(updatedBouts);
+    saveToLocalStorage('fencing_tracker_bouts', updatedBouts);
     return newBout;
   };
 
@@ -194,10 +232,13 @@ export const DataProvider = ({ children }) => {
       bout.id === id ? { ...bout, ...updatedData, updatedAt: new Date().toISOString() } : bout
     );
     setBouts(updatedBouts);
+    saveToLocalStorage('fencing_tracker_bouts', updatedBouts);
   };
 
   const deleteBout = (id) => {
-    setBouts(bouts.filter(bout => bout.id !== id));
+    const updatedBouts = bouts.filter(bout => bout.id !== id);
+    setBouts(updatedBouts);
+    saveToLocalStorage('fencing_tracker_bouts', updatedBouts);
   };
 
   const getBout = (id) => {
@@ -211,7 +252,9 @@ export const DataProvider = ({ children }) => {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
     };
-    setDeBouts([...deBouts, newDEBout]);
+    const updatedDEBouts = [...deBouts, newDEBout];
+    setDeBouts(updatedDEBouts);
+    saveToLocalStorage('fencing_tracker_de_bouts', updatedDEBouts);
     return newDEBout;
   };
 
@@ -220,10 +263,13 @@ export const DataProvider = ({ children }) => {
       deBout.id === id ? { ...deBout, ...updatedData, updatedAt: new Date().toISOString() } : deBout
     );
     setDeBouts(updatedDEBouts);
+    saveToLocalStorage('fencing_tracker_de_bouts', updatedDEBouts);
   };
 
   const deleteDEBout = (id) => {
-    setDeBouts(deBouts.filter(deBout => deBout.id !== id));
+    const updatedDEBouts = deBouts.filter(deBout => deBout.id !== id);
+    setDeBouts(updatedDEBouts);
+    saveToLocalStorage('fencing_tracker_de_bouts', updatedDEBouts);
   };
 
   const getDEBout = (id) => {
@@ -245,8 +291,8 @@ export const DataProvider = ({ children }) => {
     const victories = fencerBouts.filter(bout => bout.victory).length;
     const winPercentage = totalBouts > 0 ? (victories / totalBouts) * 100 : 0;
     
-    const touchesScored = fencerBouts.reduce((sum, bout) => sum + bout.scoreFor, 0);
-    const touchesReceived = fencerBouts.reduce((sum, bout) => sum + bout.scoreAgainst, 0);
+    const touchesScored = fencerBouts.reduce((sum, bout) => sum + (bout.scoreFor || 0), 0);
+    const touchesReceived = fencerBouts.reduce((sum, bout) => sum + (bout.scoreAgainst || 0), 0);
     const indicator = touchesScored - touchesReceived;
     
     const totalDEBouts = fencerDEBouts.length;
@@ -272,6 +318,8 @@ export const DataProvider = ({ children }) => {
     
     return fencerEntries.map(entry => {
       const tournament = getTournament(entry.tournamentId);
+      if (!tournament) return null;
+      
       const entryPools = pools.filter(pool => pool.entryId === entry.id);
       const poolIds = entryPools.map(pool => pool.id);
       const entryBouts = bouts.filter(bout => poolIds.includes(bout.poolId));
@@ -280,8 +328,8 @@ export const DataProvider = ({ children }) => {
       const victories = entryBouts.filter(bout => bout.victory).length;
       const winPercentage = totalBouts > 0 ? (victories / totalBouts) * 100 : 0;
       
-      const touchesScored = entryBouts.reduce((sum, bout) => sum + bout.scoreFor, 0);
-      const touchesReceived = entryBouts.reduce((sum, bout) => sum + bout.scoreAgainst, 0);
+      const touchesScored = entryBouts.reduce((sum, bout) => sum + (bout.scoreFor || 0), 0);
+      const touchesReceived = entryBouts.reduce((sum, bout) => sum + (bout.scoreAgainst || 0), 0);
       const indicator = touchesScored - touchesReceived;
       
       return {
@@ -292,7 +340,28 @@ export const DataProvider = ({ children }) => {
         indicator,
         finalPlacing: entry.finalPlacing,
       };
-    }).sort((a, b) => new Date(a.date) - new Date(b.date));
+    })
+    .filter(item => item !== null)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  };
+
+  // Debug function to check localStorage
+  const debugLocalStorage = () => {
+    try {
+      const data = {
+        fencers: loadFromLocalStorage('fencing_tracker_fencers'),
+        tournaments: loadFromLocalStorage('fencing_tracker_tournaments'),
+        entries: loadFromLocalStorage('fencing_tracker_entries'),
+        pools: loadFromLocalStorage('fencing_tracker_pools'),
+        bouts: loadFromLocalStorage('fencing_tracker_bouts'),
+        deBouts: loadFromLocalStorage('fencing_tracker_de_bouts'),
+      };
+      console.log('Current localStorage data:', data);
+      return data;
+    } catch (error) {
+      console.error('Error accessing localStorage:', error);
+      return { error: error.message };
+    }
   };
 
   return (
@@ -344,6 +413,9 @@ export const DataProvider = ({ children }) => {
       // Analytics
       getFencerStats,
       getPerformanceTrend,
+      
+      // Debug
+      debugLocalStorage,
     }}>
       {children}
     </DataContext.Provider>

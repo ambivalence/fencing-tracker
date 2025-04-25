@@ -82,6 +82,14 @@ export default function Layout() {
       <Divider />
       <List>
         <ListItem disablePadding>
+          <ListItemButton onClick={() => handleNavigation('/debug')}>
+            <ListItemIcon>
+              <BarChartIcon />
+            </ListItemIcon>
+            <ListItemText primary="Debug Panel" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
           <ListItemButton onClick={handleLogout}>
             <ListItemIcon>
               <LogoutIcon />

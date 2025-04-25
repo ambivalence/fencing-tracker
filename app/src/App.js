@@ -15,6 +15,7 @@ import TournamentDetail from './pages/TournamentDetail';
 import PoolEntry from './pages/PoolEntry';
 import DEEntry from './pages/DEEntry';
 import Analytics from './pages/Analytics';
+import DebugPanel from './pages/DebugPanel';
 
 // Components
 import Layout from './components/Layout';
@@ -69,6 +70,7 @@ function App() {
                 <Route path="entries/:id/pools" element={<PoolEntry />} />
                 <Route path="entries/:id/de" element={<DEEntry />} />
                 <Route path="analytics/:fencerId" element={<Analytics />} />
+                <Route path="debug" element={<DebugPanel />} />
               </Route>
             </Routes>
           </Router>
