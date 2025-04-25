@@ -29,6 +29,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -62,6 +64,13 @@ export default function TournamentDetail() {
   const [currentEntry, setCurrentEntry] = useState(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState(null);
+  
+  // Snackbar for validation errors
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'error'
+  });
   
   // Form data
   const [tournamentFormData, setTournamentFormData] = useState({
@@ -238,7 +247,11 @@ export default function TournamentDetail() {
       );
       
       if (isDuplicate) {
-        alert("This fencer is already entered in this tournament for the same weapon and age category.");
+        setSnackbar({
+          open: true,
+          message: "This fencer is already entered in this tournament for the same weapon and age category.",
+          severity: "error"
+        });
         return;
       }
       
@@ -247,6 +260,11 @@ export default function TournamentDetail() {
         tournamentId: id,
       };
       addEntry(newEntry);
+      setSnackbar({
+        open: true,
+        message: "Entry added successfully!",
+        severity: "success"
+      });
     } else {
       // For edit mode, check if the changes would create a duplicate
       const otherEntries = entries.filter(entry => entry.id !== currentEntry.id);
@@ -258,11 +276,20 @@ export default function TournamentDetail() {
       );
       
       if (wouldCreateDuplicate) {
-        alert("These changes would create a duplicate entry. A fencer cannot be entered twice in the same tournament for the same weapon and age category.");
+        setSnackbar({
+          open: true,
+          message: "These changes would create a duplicate entry. A fencer cannot be entered twice in the same tournament for the same weapon and age category.",
+          severity: "error"
+        });
         return;
       }
       
       updateEntry(currentEntry.id, entryFormData);
+      setSnackbar({
+        open: true,
+        message: "Entry updated successfully!",
+        severity: "success"
+      });
     }
     setOpenEntryDialog(false);
   };
@@ -281,6 +308,13 @@ export default function TournamentDetail() {
     deleteEntry(entryToDelete.id);
     setOpenDeleteDialog(false);
     setEntryToDelete(null);
+  };
+  
+  const handleCloseSnackbar = () => {
+    setSnackbar({
+      ...snackbar,
+      open: false
+    });
   };
   
   return (
@@ -925,6 +959,23 @@ export default function TournamentDetail() {
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

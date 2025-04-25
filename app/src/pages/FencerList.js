@@ -23,6 +23,8 @@ import {
   MenuItem,
   IconButton,
   Tooltip,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -48,6 +50,13 @@ export default function FencerList() {
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [fencerToDelete, setFencerToDelete] = useState(null);
+  
+  // Snackbar for validation errors
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'error'
+  });
 
   const handleOpenAddDialog = () => {
     setDialogMode('add');
@@ -93,14 +102,28 @@ export default function FencerList() {
   const handleSubmit = () => {
     // Validate required fields
     if (!formData.name) {
-      alert("Fencer name is required.");
+      setSnackbar({
+        open: true,
+        message: "Fencer name is required.",
+        severity: "error"
+      });
       return;
     }
     
     if (dialogMode === 'add') {
       addFencer(formData);
+      setSnackbar({
+        open: true,
+        message: "Fencer added successfully!",
+        severity: "success"
+      });
     } else {
       updateFencer(currentFencer.id, formData);
+      setSnackbar({
+        open: true,
+        message: "Fencer updated successfully!",
+        severity: "success"
+      });
     }
     setOpenDialog(false);
   };
@@ -119,6 +142,18 @@ export default function FencerList() {
     deleteFencer(fencerToDelete.id);
     setDeleteDialogOpen(false);
     setFencerToDelete(null);
+    setSnackbar({
+      open: true,
+      message: "Fencer deleted successfully",
+      severity: "success"
+    });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({
+      ...snackbar,
+      open: false
+    });
   };
 
   const handleRowClick = (fencerId) => {
@@ -310,6 +345,23 @@ export default function FencerList() {
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

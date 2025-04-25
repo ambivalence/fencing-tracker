@@ -20,6 +20,8 @@ import {
   IconButton,
   Tooltip,
   Chip,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -43,6 +45,13 @@ export default function TournamentList() {
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tournamentToDelete, setTournamentToDelete] = useState(null);
+  
+  // Snackbar for validation errors
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'error'
+  });
 
   const handleOpenAddDialog = () => {
     setDialogMode('add');
@@ -84,19 +93,37 @@ export default function TournamentList() {
   const handleSubmit = () => {
     // Validate required fields
     if (!formData.name) {
-      alert("Tournament name is required.");
+      setSnackbar({
+        open: true,
+        message: "Tournament name is required.",
+        severity: "error"
+      });
       return;
     }
     
     if (!formData.startDate) {
-      alert("Start date is required.");
+      setSnackbar({
+        open: true,
+        message: "Start date is required.",
+        severity: "error"
+      });
       return;
     }
     
     if (dialogMode === 'add') {
       addTournament(formData);
+      setSnackbar({
+        open: true,
+        message: "Tournament added successfully!",
+        severity: "success"
+      });
     } else {
       updateTournament(currentTournament.id, formData);
+      setSnackbar({
+        open: true,
+        message: "Tournament updated successfully!",
+        severity: "success"
+      });
     }
     setOpenDialog(false);
   };
@@ -115,6 +142,18 @@ export default function TournamentList() {
     deleteTournament(tournamentToDelete.id);
     setDeleteDialogOpen(false);
     setTournamentToDelete(null);
+    setSnackbar({
+      open: true,
+      message: "Tournament deleted successfully",
+      severity: "success"
+    });
+  };
+  
+  const handleCloseSnackbar = () => {
+    setSnackbar({
+      ...snackbar,
+      open: false
+    });
   };
 
   // Sort tournaments by date (most recent first)
@@ -311,6 +350,23 @@ export default function TournamentList() {
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
