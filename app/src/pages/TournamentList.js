@@ -82,6 +82,17 @@ export default function TournamentList() {
   };
 
   const handleSubmit = () => {
+    // Validate required fields
+    if (!formData.name) {
+      alert("Tournament name is required.");
+      return;
+    }
+    
+    if (!formData.startDate) {
+      alert("Start date is required.");
+      return;
+    }
+    
     if (dialogMode === 'add') {
       addTournament(formData);
     } else {
@@ -224,6 +235,8 @@ export default function TournamentList() {
             value={formData.name}
             onChange={handleInputChange}
             required
+            error={!formData.name}
+            helperText={!formData.name ? "Tournament name is required" : ""}
           />
           <TextField
             margin="dense"
@@ -246,6 +259,8 @@ export default function TournamentList() {
             value={formData.startDate}
             onChange={handleInputChange}
             required
+            error={!formData.startDate}
+            helperText={!formData.startDate ? "Start date is required" : ""}
           />
           <TextField
             margin="dense"
@@ -271,7 +286,11 @@ export default function TournamentList() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained"
+            disabled={!formData.name || !formData.startDate}
+          >
             {dialogMode === 'add' ? 'Add' : 'Save'}
           </Button>
         </DialogActions>

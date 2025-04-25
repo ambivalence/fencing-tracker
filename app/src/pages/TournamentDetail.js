@@ -228,13 +228,40 @@ export default function TournamentDetail() {
   };
   
   const handleEntrySubmit = () => {
+    // Check for duplicate entries (same fencer, weapon, and age category in the same tournament)
     if (entryDialogMode === 'add') {
+      const isDuplicate = entries.some(entry => 
+        entry.tournamentId === id &&
+        entry.fencerId === entryFormData.fencerId &&
+        entry.weapon === entryFormData.weapon &&
+        entry.ageCategory === entryFormData.ageCategory
+      );
+      
+      if (isDuplicate) {
+        alert("This fencer is already entered in this tournament for the same weapon and age category.");
+        return;
+      }
+      
       const newEntry = {
         ...entryFormData,
         tournamentId: id,
       };
       addEntry(newEntry);
     } else {
+      // For edit mode, check if the changes would create a duplicate
+      const otherEntries = entries.filter(entry => entry.id !== currentEntry.id);
+      const wouldCreateDuplicate = otherEntries.some(entry => 
+        entry.tournamentId === id &&
+        entry.fencerId === entryFormData.fencerId &&
+        entry.weapon === entryFormData.weapon &&
+        entry.ageCategory === entryFormData.ageCategory
+      );
+      
+      if (wouldCreateDuplicate) {
+        alert("These changes would create a duplicate entry. A fencer cannot be entered twice in the same tournament for the same weapon and age category.");
+        return;
+      }
+      
       updateEntry(currentEntry.id, entryFormData);
     }
     setOpenEntryDialog(false);
@@ -793,14 +820,14 @@ export default function TournamentDetail() {
           {entryDialogMode === 'add' ? 'Add New Entry' : 'Edit Entry'}
         </DialogTitle>
         <DialogContent>
-          <FormControl fullWidth margin="dense">
+          <FormControl fullWidth margin="dense" required>
             <InputLabel>Fencer</InputLabel>
             <Select
               name="fencerId"
               value={entryFormData.fencerId}
               onChange={handleEntryInputChange}
               label="Fencer"
-              required
+              error={!entryFormData.fencerId}
             >
               {fencers.map(fencer => (
                 <MenuItem key={fencer.id} value={fencer.id}>
@@ -809,26 +836,28 @@ export default function TournamentDetail() {
               ))}
             </Select>
           </FormControl>
-          <FormControl fullWidth margin="dense">
+          <FormControl fullWidth margin="dense" required>
             <InputLabel>Weapon</InputLabel>
             <Select
               name="weapon"
               value={entryFormData.weapon}
               onChange={handleEntryInputChange}
               label="Weapon"
+              error={!entryFormData.weapon}
             >
               <MenuItem value="F">Foil</MenuItem>
               <MenuItem value="E">Épée</MenuItem>
               <MenuItem value="S">Saber</MenuItem>
             </Select>
           </FormControl>
-          <FormControl fullWidth margin="dense">
+          <FormControl fullWidth margin="dense" required>
             <InputLabel>Age Category</InputLabel>
             <Select
               name="ageCategory"
               value={entryFormData.ageCategory}
               onChange={handleEntryInputChange}
               label="Age Category"
+              error={!entryFormData.ageCategory}
             >
               <MenuItem value="Y10">Y10 (Under 10)</MenuItem>
               <MenuItem value="Y12">Y12 (Under 12)</MenuItem>
@@ -871,7 +900,11 @@ export default function TournamentDetail() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseEntryDialog}>Cancel</Button>
-          <Button onClick={handleEntrySubmit} variant="contained">
+          <Button 
+            onClick={handleEntrySubmit} 
+            variant="contained"
+            disabled={!entryFormData.fencerId || !entryFormData.weapon || !entryFormData.ageCategory}
+          >
             {entryDialogMode === 'add' ? 'Add' : 'Save'}
           </Button>
         </DialogActions>

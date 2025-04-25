@@ -91,6 +91,12 @@ export default function FencerList() {
   };
 
   const handleSubmit = () => {
+    // Validate required fields
+    if (!formData.name) {
+      alert("Fencer name is required.");
+      return;
+    }
+    
     if (dialogMode === 'add') {
       addFencer(formData);
     } else {
@@ -207,6 +213,8 @@ export default function FencerList() {
             value={formData.name}
             onChange={handleInputChange}
             required
+            error={!formData.name}
+            helperText={!formData.name ? "Name is required" : ""}
           />
           <TextField
             margin="dense"
@@ -281,7 +289,7 @@ export default function FencerList() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">
+          <Button onClick={handleSubmit} variant="contained" disabled={!formData.name}>
             {dialogMode === 'add' ? 'Add' : 'Save'}
           </Button>
         </DialogActions>
