@@ -146,9 +146,17 @@ export default function TournamentDetail() {
   // Entry handlers
   const handleOpenAddEntryDialog = () => {
     setEntryDialogMode('add');
+    
+    // Default to the first fencer in the list
+    const defaultFencer = fencers.length > 0 ? fencers[0] : null;
+    
+    // Auto-fill weapon based on fencer's primary weapon if available
+    const defaultWeapon = defaultFencer?.primaryWeapon ? 
+      convertWeaponNameToCode(defaultFencer.primaryWeapon) : '';
+    
     setEntryFormData({
-      fencerId: fencers.length > 0 ? fencers[0].id : '',
-      weapon: '',
+      fencerId: defaultFencer?.id || '',
+      weapon: defaultWeapon,
       ageCategory: '',
       initialSeeding: '',
       finalPlacing: '',
@@ -177,10 +185,40 @@ export default function TournamentDetail() {
   
   const handleEntryInputChange = (e) => {
     const { name, value } = e.target;
-    setEntryFormData({
-      ...entryFormData,
-      [name]: value,
-    });
+    
+    // If fencer selection changes, auto-fill weapon if the fencer has a primary weapon
+    if (name === 'fencerId') {
+      const selectedFencer = fencers.find(f => f.id === value);
+      if (selectedFencer && selectedFencer.primaryWeapon) {
+        setEntryFormData({
+          ...entryFormData,
+          [name]: value,
+          weapon: convertWeaponNameToCode(selectedFencer.primaryWeapon)
+        });
+      } else {
+        setEntryFormData({
+          ...entryFormData,
+          [name]: value
+        });
+      }
+    } else {
+      setEntryFormData({
+        ...entryFormData,
+        [name]: value,
+      });
+    }
+  };
+  
+  // Helper function to convert weapon name to code
+  const convertWeaponNameToCode = (weaponName) => {
+    if (!weaponName) return '';
+    
+    const weaponNameLower = weaponName.toLowerCase();
+    if (weaponNameLower.includes('foil')) return 'F';
+    if (weaponNameLower.includes('épée') || weaponNameLower.includes('epee')) return 'E';
+    if (weaponNameLower.includes('saber') || weaponNameLower.includes('sabre')) return 'S';
+    
+    return '';
   };
   
   const handleEntrySubmit = () => {
