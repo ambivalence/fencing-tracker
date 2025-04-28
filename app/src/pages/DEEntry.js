@@ -162,8 +162,12 @@ export default function DEEntry() {
       const scoreFor = name === 'scoreFor' ? parseInt(value) || 0 : parseInt(boutFormData.scoreFor) || 0;
       const scoreAgainst = name === 'scoreAgainst' ? parseInt(value) || 0 : parseInt(boutFormData.scoreAgainst) || 0;
       
-      // In fencing, victory is determined by who has the higher score
-      updatedFormData.victory = scoreFor > scoreAgainst;
+      // Only auto-update victory when scores are not equal
+      if (scoreFor !== scoreAgainst) {
+        // In fencing, victory is determined by who has the higher score
+        updatedFormData.victory = scoreFor > scoreAgainst;
+      }
+      // When scores are equal, keep the current victory status
     }
     
     setBoutFormData(updatedFormData);
@@ -176,23 +180,27 @@ export default function DEEntry() {
     const scoreFor = parseInt(boutFormData.scoreFor) || 0;
     const scoreAgainst = parseInt(boutFormData.scoreAgainst) || 0;
     
-    if (victory && scoreFor <= scoreAgainst) {
-      setSnackbar({
-        open: true,
-        message: "Victory can only be set when your score is higher than opponent's score.",
-        severity: "error"
-      });
-      return;
+    // Only validate when scores are not equal
+    if (scoreFor !== scoreAgainst) {
+      if (victory && scoreFor < scoreAgainst) {
+        setSnackbar({
+          open: true,
+          message: "Victory can only be set when your score is higher than or equal to opponent's score.",
+          severity: "error"
+        });
+        return;
+      }
+      
+      if (!victory && scoreFor > scoreAgainst) {
+        setSnackbar({
+          open: true,
+          message: "Defeat can only be set when your score is lower than or equal to opponent's score.",
+          severity: "error"
+        });
+        return;
+      }
     }
-    
-    if (!victory && scoreFor > scoreAgainst) {
-      setSnackbar({
-        open: true,
-        message: "Defeat can only be set when your score is lower than or equal to opponent's score.",
-        severity: "error"
-      });
-      return;
-    }
+    // When scores are equal, allow manual setting of victory/defeat
     
     setBoutFormData({
       ...boutFormData,
@@ -224,23 +232,27 @@ export default function DEEntry() {
     const scoreFor = parseInt(boutFormData.scoreFor) || 0;
     const scoreAgainst = parseInt(boutFormData.scoreAgainst) || 0;
     
-    if (boutFormData.victory && scoreFor <= scoreAgainst) {
-      setSnackbar({
-        open: true,
-        message: "Victory can only be set when your score is higher than opponent's score",
-        severity: "error"
-      });
-      return;
+    // Only validate when scores are not equal
+    if (scoreFor !== scoreAgainst) {
+      if (boutFormData.victory && scoreFor < scoreAgainst) {
+        setSnackbar({
+          open: true,
+          message: "Victory can only be set when your score is higher than or equal to opponent's score",
+          severity: "error"
+        });
+        return;
+      }
+      
+      if (!boutFormData.victory && scoreFor > scoreAgainst) {
+        setSnackbar({
+          open: true,
+          message: "Defeat can only be set when your score is lower than or equal to opponent's score",
+          severity: "error"
+        });
+        return;
+      }
     }
-    
-    if (!boutFormData.victory && scoreFor > scoreAgainst) {
-      setSnackbar({
-        open: true,
-        message: "Defeat can only be set when your score is lower than or equal to opponent's score",
-        severity: "error"
-      });
-      return;
-    }
+    // When scores are equal, allow manual setting of victory/defeat
     
     if (boutDialogMode === 'add') {
       const newBout = {
@@ -619,7 +631,7 @@ export default function DEEntry() {
             sx={{ mt: 2 }}
           />
           <FormHelperText>
-            Victory is automatically set based on scores. Victory = Your score is higher than opponent's score.
+            Victory is automatically set based on scores when they are not equal. When scores are equal, you can manually set victory or defeat.
           </FormHelperText>
           <TextField
             margin="dense"
