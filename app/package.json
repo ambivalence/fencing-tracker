@@ -2,6 +2,7 @@
   "name": "fencing-tracker",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://ambivalence.github.io/fencing-tracker",
   "dependencies": {
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
@@ -14,9 +15,12 @@
     "react-router-dom": "^6.14.0"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "react-scripts": "5.0.1"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
