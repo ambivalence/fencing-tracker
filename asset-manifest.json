@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/fencing-tracker/static/css/main.fb3d317e.css",
+    "main.js": "/fencing-tracker/static/js/main.7f3513c8.js",
+    "index.html": "/fencing-tracker/index.html",
+    "main.fb3d317e.css.map": "/fencing-tracker/static/css/main.fb3d317e.css.map",
+    "main.7f3513c8.js.map": "/fencing-tracker/static/js/main.7f3513c8.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.fb3d317e.css",
+    "static/js/main.7f3513c8.js"
+  ]
+}
